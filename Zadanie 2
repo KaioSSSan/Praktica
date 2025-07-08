@@ -1,0 +1,130 @@
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class CarParkManagement {
+    public static void main(String[] args) {
+        task1CarYears();      // Задача 1: Массивы
+        task2ModelManagement(); // Задача 2: Коллекции
+        task3CarComparison(); // Задача 3: equals/hashCode
+        task4StreamAnalysis(); // Задача 4: Stream API
+    }
+
+    // Задача 1: Работа с годами выпуска машин
+    private static void task1CarYears() {
+        Random r = new Random();
+        int[] years = new int[50];
+        for (int i = 0; i < 50; i++) years[i] = 2000 + r.nextInt(26);
+
+        // Вывод машин после 2015
+        System.out.println("Машины после 2015:");
+        Arrays.stream(years).filter(y -> y > 2015).forEach(y -> System.out.print(y + " "));
+
+        // Средний возраст
+        double avgAge = Arrays.stream(years).map(y -> 2025 - y).average().orElse(0);
+        System.out.println("\nСредний возраст: " + avgAge + " лет\n");
+    }
+
+    // Задача 2: Управление моделями
+    private static void task2ModelManagement() {
+        // Список моделей с дубликатами
+        List<String> models = new ArrayList<>(Arrays.asList(
+                "Toyota Camry", "BMW X5", "Tesla Model 3", "Toyota Camry",
+                "Audi Q7", "Tesla Model S", "BMW X5", "Mercedes C-Class"));
+
+        // Удаление дубликатов, замена Tesla, сортировка
+        Set<String> result = models.stream()
+                .distinct()
+                .map(m -> m.contains("Tesla") ? "ELECTRO_CAR" : m)
+                .sorted(Comparator.reverseOrder())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        System.out.println("Обработанные модели:");
+        result.forEach(System.out::println);
+        System.out.println();
+    }
+
+    // Задача 3: Сравнение машин
+    private static void task3CarComparison() {
+        Set<Car> cars = new HashSet<>();
+        cars.add(new Car("VIN1", "Camry", "Toyota", 2020, 30000, 25000));
+        cars.add(new Car("VIN2", "X5", "BMW", 2018, 45000, 35000));
+        cars.add(new Car("VIN1", "Camry", "Toyota", 2021, 20000, 26000)); // Дубликат VIN
+        cars.add(new Car("VIN3", "Model 3", "Tesla", 2022, 15000, 40000));
+
+        // Вывод уникальных машин по году
+        System.out.println("Уникальные машины (по году):");
+        cars.stream().sorted().forEach(System.out::println);
+        System.out.println();
+    }
+
+    // Задача 4: Анализ автопарка
+    private static void task4StreamAnalysis() {
+        List<Car> cars = Arrays.asList(
+                new Car("VIN1", "Camry", "Toyota", 2020, 30000, 25000),
+                new Car("VIN2", "X5", "BMW", 2018, 45000, 35000),
+                new Car("VIN3", "Model 3", "Tesla", 2022, 15000, 40000),
+                new Car("VIN4", "Q7", "Audi", 2019, 60000, 38000),
+                new Car("VIN5", "C-Class", "Mercedes", 2021, 20000, 42000));
+
+        // Топ-3 дорогих машин с пробегом < 50,000км
+        System.out.println("Топ-3 дорогих (пробег < 50,000км):");
+        cars.stream()
+                .filter(c -> c.getMileage() < 50000)
+                .sorted(Comparator.comparingDouble(Car::getPrice).reversed())
+                .limit(3)
+                .forEach(System.out::println);
+
+        // Средний пробег
+        double avgMileage = cars.stream().mapToInt(Car::getMileage).average().orElse(0);
+        System.out.println("Средний пробег: " + avgMileage + " км");
+
+        // Группировка по производителю
+        Map<String, List<Car>> byManufacturer = cars.stream()
+                .collect(Collectors.groupingBy(Car::getManufacturer));
+        System.out.println("\nМашины по производителям:");
+        byManufacturer.forEach((m, c) -> {
+            System.out.println(m + ":");
+            c.forEach(car -> System.out.println("  " + car));
+        });
+    }
+}
+
+// Класс машины
+class Car implements Comparable<Car> {
+    private String vin, model, manufacturer;
+    private int year, mileage;
+    private double price;
+
+    public Car(String vin, String model, String manufacturer, int year, int mileage, double price) {
+        this.vin = vin;
+        this.model = model;
+        this.manufacturer = manufacturer;
+        this.year = year;
+        this.mileage = mileage;
+        this.price = price;
+    }
+
+    public String getVin() { return vin; }
+    public String getManufacturer() { return manufacturer; }
+    public int getMileage() { return mileage; }
+    public double getPrice() { return price; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        return Objects.equals(vin, ((Car) o).vin);
+    }
+
+    @Override
+    public int hashCode() { return Objects.hash(vin); }
+
+    @Override
+    public int compareTo(Car o) { return o.year - this.year; }
+
+    @Override
+    public String toString() {
+        return String.format("Car[vin=%s, model=%s, manufacturer=%s, year=%d, mileage=%d, price=%.2f]",
+                vin, model, manufacturer, year, mileage, price);
+    }
+}
