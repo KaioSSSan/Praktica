@@ -1,1 +1,1 @@
-# Praktica
+# Practice
