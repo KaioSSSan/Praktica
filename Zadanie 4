@@ -1,0 +1,136 @@
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.Random;
+
+// Задание 1: Интерфейс Printable для лямбда-выражения
+interface Printable {
+    void print();
+}
+
+// Задание 4: Класс HeavyBox для работы с Consumer
+class HeavyBox {
+    private double weight;
+
+    public HeavyBox(double weight) {
+        this.weight = weight;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+}
+
+// Задание 7: Собственная аннотация DeprecatedEx
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD})
+@interface DeprecatedEx {
+    String message();
+}
+
+// Пример класса с устаревшими элементами
+@DeprecatedEx(message = "Используйте NewSampleClass вместо этого")
+class SampleClass {
+    @DeprecatedEx(message = "Используйте newMethod вместо этого")
+    public void oldMethod() {
+        System.out.println("Старый метод");
+    }
+
+    public void newMethod() {
+        System.out.println("Новый метод");
+    }
+}
+
+public class LambdaAndAnnotationDemo {
+    public static void main(String[] args) {
+        // Задание 1: Лямбда для Printable
+        System.out.println("Задание 1: Лямбда для Printable");
+        Printable printable = () -> System.out.println("Печатаем что-то!");
+        printable.print();
+        System.out.println();
+
+        // Задание 2: Проверка строк с помощью Predicate
+        System.out.println("Задание 2: Проверка строк");
+        // 2.1: Проверка, что строка не null
+        Predicate<String> isNotNull = str -> str != null;
+        System.out.println("Является ли 'Hello' не null? " + isNotNull.test("Hello")); // true
+        System.out.println("Является ли null не null? " + isNotNull.test(null)); // false
+
+        // 2.2: Проверка, что строка не пуста
+        Predicate<String> isNotEmpty = str -> str != null && !str.isEmpty();
+        System.out.println("Является ли 'Hello' не пустой? " + isNotEmpty.test("Hello")); // true
+        System.out.println("Является ли '' не пустой? " + isNotEmpty.test("")); // false
+
+        // 2.3: Комбинация проверок с помощью and()
+        Predicate<String> isValidString = isNotNull.and(isNotEmpty);
+        System.out.println("Является ли 'Test' валидной? " + isValidString.test("Test")); // true
+        System.out.println("Является ли '' валидной? " + isValidString.test("")); // false
+        System.out.println("Является ли null валидной? " + isValidString.test(null)); // false
+        System.out.println();
+
+        // Задание 3: Проверка строки на начало с J или N и конец на A
+        System.out.println("Задание 3: Проверка шаблона строки");
+        Predicate<String> startsWithJorN = str -> str != null && (str.startsWith("J") || str.startsWith("N"));
+        Predicate<String> endsWithA = str -> str != null && str.endsWith("A");
+        Predicate<String> stringCheck = startsWithJorN.and(endsWithA);
+        System.out.println("Является ли 'Java' валидной? " + stringCheck.test("Java")); // true
+        System.out.println("Является ли 'Ninja' валидной? " + stringCheck.test("Ninja")); // true
+        System.out.println("Является ли 'Hello' валидной? " + stringCheck.test("Hello")); // false
+        System.out.println();
+
+        // Задание 4: Лямбда для HeavyBox с Consumer
+        System.out.println("Задание 4: Consumer для HeavyBox");
+        Consumer<HeavyBox> loadBox = box -> System.out.println("Отгрузили ящик с весом " + box.getWeight());
+        Consumer<HeavyBox> shipBox = box -> System.out.println("Отправляем ящик с весом " + box.getWeight());
+        Consumer<HeavyBox> processBox = loadBox.andThen(shipBox);
+        HeavyBox box = new HeavyBox(50.5);
+        processBox.accept(box);
+        System.out.println();
+
+        // Задание 5: Лямбда для Function
+        System.out.println("Задание 5: Проверка числа с Function");
+        Function<Integer, String> numberCheck = n -> {
+            if (n > 0) return "Положительное число";
+            else if (n < 0) return "Отрицательное число";
+            else return "Ноль";
+        };
+        System.out.println("5: " + numberCheck.apply(5)); // Положительное
+        System.out.println("-3: " + numberCheck.apply(-3)); // Отрицательное
+        System.out.println("0: " + numberCheck.apply(0)); // Ноль
+        System.out.println();
+
+        // Задание 6: Лямбда для Supplier
+        System.out.println("Задание 6: Supplier для случайного числа");
+        Supplier<Integer> randomNumber = () -> new Random().nextInt(11);
+        System.out.println("Случайное число: " + randomNumber.get());
+        System.out.println("Случайное число: " + randomNumber.get());
+        System.out.println();
+
+        // Задание 7: Обработка аннотаций DeprecatedEx
+        System.out.println("Задание 7: Обработка пользовательских аннотаций");
+        processDeprecatedAnnotations(SampleClass.class);
+    }
+
+    // Метод для обработки аннотаций DeprecatedEx с использованием рефлексии
+    private static void processDeprecatedAnnotations(Class<?> clazz) {
+        // Проверка, есть ли аннотация у класса
+        if (clazz.isAnnotationPresent(DeprecatedEx.class)) {
+            DeprecatedEx annotation = clazz.getAnnotation(DeprecatedEx.class);
+            System.out.println("Внимание: класс '" + clazz.getSimpleName() + "' устарел. Альтернатива: '" + annotation.message() + "'");
+        }
+
+        // Проверка методов класса
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(DeprecatedEx.class)) {
+                DeprecatedEx annotation = method.getAnnotation(DeprecatedEx.class);
+                System.out.println("Внимание: метод '" + method.getName() + "' устарел. Альтернатива: '" + annotation.message() + "'");
+            }
+        }
+    }
+}
