@@ -1,0 +1,148 @@
+import java.util.Random;
+
+// Ошибка, если комната уже забронирована
+class RoomAlreadyReservedException extends RuntimeException {
+    public RoomAlreadyReservedException(String message) {
+        super(message);
+    }
+}
+
+// Интерфейс для работы с комнатами
+interface RoomService<T extends Room> {
+    void clean(T room); // Почистить комнату
+    void reserve(T room) throws RoomAlreadyReservedException; // Забронировать
+    void free(T room); // Освободить
+}
+
+// Абстрактный класс комнаты
+abstract class Room {
+    protected int number; // Номер комнаты
+    protected int maxPeople; // Максимум человек
+    protected int price; // Цена за ночь
+    protected boolean isReserved; // Забронирована ли
+
+    protected Room(int number, int price) {
+        this.number = number;
+        this.price = price;
+        this.maxPeople = new Random().nextInt(4) + 1; // Случайно 1-4 человека
+        this.isReserved = false;
+    }
+
+    // Метод для получения типа комнаты
+    public String getRoomType() {
+        return "Base Room";
+    }
+}
+
+// Эконом комната
+class EconomyRoom extends Room {
+    public EconomyRoom(int number, int price) {
+        super(number, price);
+    }
+
+    @Override
+    public String getRoomType() {
+        return "Economy";
+    }
+}
+
+// Абстрактный класс для улучшенных комнат
+abstract class ProRoom extends Room {
+    protected ProRoom(int number, int price) {
+        super(number, price);
+    }
+
+    @Override
+    public String getRoomType() {
+        return "Pro";
+    }
+}
+
+// Стандартная комната
+class StandardRoom extends ProRoom {
+    public StandardRoom(int number, int price) {
+        super(number, price);
+    }
+
+    @Override
+    public String getRoomType() {
+        return "Standard";
+    }
+}
+
+// Люкс комната
+class LuxRoom extends ProRoom {
+    public LuxRoom(int number, int price) {
+        super(number, price);
+    }
+
+    @Override
+    public String getRoomType() {
+        return "Lux";
+    }
+}
+
+// Ультра люкс комната
+class UltraLuxRoom extends LuxRoom {
+    public UltraLuxRoom(int number, int price) {
+        super(number, price);
+    }
+
+    @Override
+    public String getRoomType() {
+        return "Ultra Lux";
+    }
+}
+
+// Класс для работы с комнатами
+class HotelRoomService<T extends Room> implements RoomService<T> {
+    public void clean(T room) {
+        System.out.println("Комната " + room.number + " убрана");
+    }
+
+    public void reserve(T room) throws RoomAlreadyReservedException {
+        if (room.isReserved) {
+            throw new RoomAlreadyReservedException("Комната " + room.number + " уже забронирована");
+        }
+        room.isReserved = true;
+        System.out.println("Комната " + room.number + " забронирована");
+    }
+
+    public void free(T room) {
+        room.isReserved = false;
+        System.out.println("Комната " + room.number + " освобождена");
+    }
+}
+
+// Главный класс для теста
+public class HotelRoomSystem {
+    public static void main(String[] args) {
+        // Создаем комнаты
+        EconomyRoom economy = new EconomyRoom(101, 50);
+        StandardRoom standard = new StandardRoom(201, 100);
+        LuxRoom lux = new LuxRoom(301, 200);
+        UltraLuxRoom ultraLux = new UltraLuxRoom(401, 300);
+
+        // Создаем сервис
+        HotelRoomService<Room> service = new HotelRoomService<>();
+
+        // Тестируем комнаты
+        testRoom(service, economy);
+        testRoom(service, standard);
+        testRoom(service, lux);
+        testRoom(service, ultraLux);
+    }
+
+    // Тест одной комнаты
+    private static <T extends Room> void testRoom(HotelRoomService<T> service, T room) {
+        System.out.println("\nТест комнаты " + room.number + " (" + room.getRoomType() + "):");
+        try {
+            service.clean(room);
+            service.reserve(room);
+            service.reserve(room); // Пробуем забронировать еще раз
+        } catch (RoomAlreadyReservedException e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
+        service.free(room);
+    }
+}
