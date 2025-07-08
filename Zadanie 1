@@ -1,0 +1,80 @@
+import java.time.LocalDateTime;
+import java.util.Scanner;
+
+public class BankAccount {
+    private String ownerName;
+    private int balance;
+    private LocalDateTime openingDate;
+    private boolean isBlocked;
+
+    public BankAccount(String ownerName) {
+        this.ownerName = ownerName;
+        balance = 0;
+        openingDate = LocalDateTime.now();
+        isBlocked = false;
+    }
+
+    public boolean deposit(int amount) {
+        if (isBlocked || amount <= 0) return false;
+        balance += amount;
+        return true;
+    }
+
+    public boolean withdraw(int amount) {
+        if (isBlocked || amount <= 0 || amount > balance) return false;
+        balance -= amount;
+        return true;
+    }
+
+    public boolean transfer(BankAccount other, int amount) {
+        if (isBlocked || other.isBlocked || amount <= 0 || amount > balance) return false;
+        balance -= amount;
+        other.balance += amount;
+        return true;
+    }
+
+    public String getOwnerName() { return ownerName; }
+    public int getBalance() { return balance; }
+    public boolean isBlocked() { return isBlocked; }
+    public void setBlocked(boolean blocked) { isBlocked = blocked; }
+
+    public static void main(String[] args) {
+        Scanner s = new Scanner(System.in);
+        System.out.print("Имя владельца 1: ");
+        BankAccount a1 = new BankAccount(s.nextLine());
+        System.out.print("Имя владельца 2: ");
+        BankAccount a2 = new BankAccount(s.nextLine());
+
+        while (true) {
+            System.out.print("\n1.Пополнить 2.Снять 3.Перевести 4.Блок/Разблок 5.Баланс 6.Выход\nВыбор: ");
+            int c = s.nextInt();
+            s.nextLine();
+            if (c == 6) break;
+
+            System.out.print("Счет (1-" + a1.getOwnerName() + ", 2-" + a2.getOwnerName() + "): ");
+            BankAccount a = s.nextInt() == 1 ? a1 : a2;
+            s.nextLine();
+
+            if (c == 1) {
+                System.out.print("Сумма: ");
+                System.out.println(a.deposit(s.nextInt()) ? "Успех: " + a.getBalance() : "Ошибка");
+            } else if (c == 2) {
+                System.out.print("Сумма: ");
+                System.out.println(a.withdraw(s.nextInt()) ? "Успех: " + a.getBalance() : "Ошибка");
+            } else if (c == 3) {
+                System.out.print("На счет (1-" + a1.getOwnerName() + ", 2-" + a2.getOwnerName() + "): ");
+                BankAccount t = s.nextInt() == 1 ? a1 : a2;
+                System.out.print("Сумма: ");
+                int amt = s.nextInt();
+                System.out.println(a.transfer(t, amt) ? "Успех: " + a.getOwnerName() + ":" + a.getBalance() + ", " + t.getOwnerName() + ":" + t.getBalance() : "Ошибка");
+            } else if (c == 4) {
+                System.out.print("Блокировать? (true/false): ");
+                a.setBlocked(s.nextBoolean());
+                System.out.println(a.getOwnerName() + (a.isBlocked() ? " заблокирован" : " разблокирован"));
+            } else if (c == 5) {
+                System.out.println("Баланс " + a.getOwnerName() + ": " + a.getBalance());
+            }
+        }
+        s.close();
+    }
+}
